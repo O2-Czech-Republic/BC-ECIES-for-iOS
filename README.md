@@ -17,7 +17,10 @@ Apple uses a rare implementation of ECIES which does not perform explicit messag
   - SHA512
   
 #### Supported symmetric encryption scheme
-- AES (GCM) using an all-zero 16-byte nonce and 128-bit keys for EC keypairs <= 256 bits
+- AES (GCM) using:
+  - an all-zero 16-byte nonce 
+  - 128-bit keys for EC keypairs <= 256 bits
+  - 16 bytes long tag
 
 
 ## Encryption
