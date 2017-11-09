@@ -1,38 +1,38 @@
 package cz.o2.smartbox.crypto.ecies;
 
-import org.spongycastle.crypto.BlockCipher;
-import org.spongycastle.crypto.CipherParameters;
-import org.spongycastle.crypto.InvalidCipherTextException;
-import org.spongycastle.crypto.KeyEncoder;
-import org.spongycastle.crypto.agreement.ECDHBasicAgreement;
-import org.spongycastle.crypto.digests.SHA1Digest;
-import org.spongycastle.crypto.engines.AESEngine;
-import org.spongycastle.crypto.engines.DESedeEngine;
-import org.spongycastle.crypto.engines.IESEngine;
-import org.spongycastle.crypto.engines.OldIESEngine;
-import org.spongycastle.crypto.generators.ECKeyPairGenerator;
-import org.spongycastle.crypto.generators.EphemeralKeyPairGenerator;
-import org.spongycastle.crypto.generators.KDF2BytesGenerator;
-import org.spongycastle.crypto.macs.HMac;
-import org.spongycastle.crypto.modes.CBCBlockCipher;
-import org.spongycastle.crypto.paddings.PaddedBufferedBlockCipher;
-import org.spongycastle.crypto.params.AsymmetricKeyParameter;
-import org.spongycastle.crypto.params.ECDomainParameters;
-import org.spongycastle.crypto.params.ECKeyGenerationParameters;
-import org.spongycastle.crypto.params.ECKeyParameters;
-import org.spongycastle.crypto.params.ECPublicKeyParameters;
-import org.spongycastle.crypto.params.IESWithCipherParameters;
-import org.spongycastle.crypto.params.ParametersWithIV;
-import org.spongycastle.crypto.parsers.ECIESPublicKeyParser;
-import org.spongycastle.jcajce.provider.asymmetric.ec.IESCipher;
-import org.spongycastle.jcajce.provider.asymmetric.util.ECUtil;
-import org.spongycastle.jcajce.provider.asymmetric.util.IESUtil;
-import org.spongycastle.jcajce.util.BCJcaJceHelper;
-import org.spongycastle.jcajce.util.JcaJceHelper;
-import org.spongycastle.jce.interfaces.ECKey;
-import org.spongycastle.jce.interfaces.IESKey;
-import org.spongycastle.jce.spec.IESParameterSpec;
-import org.spongycastle.util.Strings;
+import org.bouncycastle.crypto.BlockCipher;
+import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.KeyEncoder;
+import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
+import org.bouncycastle.crypto.digests.SHA1Digest;
+import org.bouncycastle.crypto.engines.AESEngine;
+import org.bouncycastle.crypto.engines.DESedeEngine;
+import org.bouncycastle.crypto.engines.IESEngine;
+import org.bouncycastle.crypto.engines.OldIESEngine;
+import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
+import org.bouncycastle.crypto.generators.EphemeralKeyPairGenerator;
+import org.bouncycastle.crypto.generators.KDF2BytesGenerator;
+import org.bouncycastle.crypto.macs.HMac;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.params.ECDomainParameters;
+import org.bouncycastle.crypto.params.ECKeyGenerationParameters;
+import org.bouncycastle.crypto.params.ECKeyParameters;
+import org.bouncycastle.crypto.params.ECPublicKeyParameters;
+import org.bouncycastle.crypto.params.IESWithCipherParameters;
+import org.bouncycastle.crypto.params.ParametersWithIV;
+import org.bouncycastle.crypto.parsers.ECIESPublicKeyParser;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.IESCipher;
+import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil;
+import org.bouncycastle.jcajce.provider.asymmetric.util.IESUtil;
+import org.bouncycastle.jcajce.util.BCJcaJceHelper;
+import org.bouncycastle.jcajce.util.JcaJceHelper;
+import org.bouncycastle.jce.interfaces.ECKey;
+import org.bouncycastle.jce.interfaces.IESKey;
+import org.bouncycastle.jce.spec.IESParameterSpec;
+import org.bouncycastle.util.Strings;
 
 import java.io.ByteArrayOutputStream;
 import java.security.AlgorithmParameters;
@@ -264,7 +264,7 @@ public class IESCipherGCM extends CipherSpi
         // Use default parameters (including cipher key size) if none are specified
         if (engineSpec == null)
         {
-            this.engineSpec = IESUtil.guessParameterSpec(engine.getCipher());
+            this.engineSpec = IESUtil.guessParameterSpec(engine.getCipher(), null);
         }
         else if (engineSpec instanceof IESParameterSpec)
         {
@@ -530,24 +530,6 @@ public class IESCipherGCM extends CipherSpi
         }
     }
 
-    static public class ECIESwithDESede
-            extends IESCipher.ECIESwithCipher
-    {
-        public ECIESwithDESede()
-        {
-            super(new DESedeEngine());
-        }
-    }
-
-    static public class ECIESwithAES
-            extends IESCipher.ECIESwithCipher
-    {
-        public ECIESwithAES()
-        {
-            super(new AESEngine());
-        }
-    }
-
     static public class ECIESwithDESedeCBC
             extends IESCipher.ECIESwithCipher
     {
@@ -597,42 +579,6 @@ public class IESCipherGCM extends CipherSpi
                     new KDF2BytesGenerator(new SHA1Digest()),
                     new HMac(new SHA1Digest()),
                     new PaddedBufferedBlockCipher(baseCipher)), ivLength);
-        }
-    }
-
-    static public class OldECIESwithDESede
-            extends IESCipher.OldECIESwithCipher
-    {
-        public OldECIESwithDESede()
-        {
-            super(new DESedeEngine());
-        }
-    }
-
-    static public class OldECIESwithAES
-            extends IESCipher.OldECIESwithCipher
-    {
-        public OldECIESwithAES()
-        {
-            super(new AESEngine());
-        }
-    }
-
-    static public class OldECIESwithDESedeCBC
-            extends IESCipher.OldECIESwithCipher
-    {
-        public OldECIESwithDESedeCBC()
-        {
-            super(new CBCBlockCipher(new DESedeEngine()), 8);
-        }
-    }
-
-    static public class OldECIESwithAESCBC
-            extends IESCipher.OldECIESwithCipher
-    {
-        public OldECIESwithAESCBC()
-        {
-            super(new CBCBlockCipher(new AESEngine()), 16);
         }
     }
 }
