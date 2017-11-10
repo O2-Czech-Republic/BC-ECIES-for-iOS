@@ -8,15 +8,9 @@ import org.bouncycastle.crypto.EphemeralKeyPair;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.KeyParser;
 import org.bouncycastle.crypto.generators.EphemeralKeyPairGenerator;
-import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
-import org.bouncycastle.crypto.params.IESParameters;
-import org.bouncycastle.crypto.params.IESWithCipherParameters;
-import org.bouncycastle.crypto.params.KDFParameters;
-import org.bouncycastle.crypto.params.KeyParameter;
-import org.bouncycastle.crypto.params.ParametersWithIV;
+import org.bouncycastle.crypto.params.*;
 import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.BigIntegers;
-import org.bouncycastle.util.Pack;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -32,7 +26,7 @@ public class IESEngineGCM {
     CipherParameters privParam, pubParam;
     IESParameters param;
 
-    byte[] V;
+    byte[] encodedPublicKey;
     private EphemeralKeyPairGenerator keyPairGenerator;
     private KeyParser keyParser;
     private byte[] IV;
@@ -89,7 +83,7 @@ public class IESEngineGCM {
         this.forEncryption = forEncryption;
         this.privParam = privParam;
         this.pubParam = pubParam;
-        this.V = new byte[0];
+        this.encodedPublicKey = new byte[0];
 
         extractParams(params);
     }
@@ -163,7 +157,7 @@ public class IESEngineGCM {
 
             kdf.generateBytes(K, 0, K.length);
 
-            if (V.length != 0)
+            if (encodedPublicKey.length != 0)
             {
                 System.arraycopy(K, 0, K2, 0, K2.length);
                 System.arraycopy(K, K2.length, K1, 0, K1.length);
@@ -196,7 +190,8 @@ public class IESEngineGCM {
             // If iv provided use it to initialise the cipher
             if (IV != null)
             {
-                cipher.init(true, new ParametersWithIV(new KeyParameter(K1), IV));
+                //cipher.init(true, new ParametersWithIV(new KeyParameter(K1), IV));
+                cipher.init(true, new AEADParameters(new KeyParameter(K1), 16*8, IV, encodedPublicKey));
             }
             else
             {
@@ -209,19 +204,10 @@ public class IESEngineGCM {
         }
 
 
-        // Convert the length of the encoding vector into a byte array.
-        byte[] P2 = param.getEncodingV();
-        byte[] L2 = null;
-        if (V.length != 0)
-        {
-            L2 = getLengthTag(P2);
-        }
-
-
-        // Output the triple (V,C,T).
-        byte[] Output = new byte[V.length + len];
-        System.arraycopy(V, 0, Output, 0, V.length);
-        System.arraycopy(C, 0, Output, V.length, len);
+        // Output the triple (encodedPublicKey,C,T).
+        byte[] Output = new byte[encodedPublicKey.length + len];
+        System.arraycopy(encodedPublicKey, 0, Output, 0, encodedPublicKey.length);
+        System.arraycopy(C, 0, Output, encodedPublicKey.length, len);
         return Output;
     }
 
@@ -234,22 +220,22 @@ public class IESEngineGCM {
         byte[] M = null, K = null, K1 = null, K2 = null;
         int len;
 
-        // Ensure that the length of the input is greater than the MAC in bytes
-        if (inLen < V.length)
+        // Ensure that the length of the input is greater than the public key
+        if (inLen < encodedPublicKey.length)
         {
-            throw new InvalidCipherTextException("Length of input must be greater than the MAC and V combined");
+            throw new InvalidCipherTextException("Length of input must be greater than the MAC and encodedPublicKey combined");
         }
 
         if (cipher == null)
         {
             // Streaming mode.
-            K1 = new byte[inLen - V.length];
+            K1 = new byte[inLen - encodedPublicKey.length];
             K2 = new byte[param.getMacKeySize() / 8];
             K = new byte[K1.length + K2.length];
 
             kdf.generateBytes(K, 0, K.length);
 
-            if (V.length != 0)
+            if (encodedPublicKey.length != 0)
             {
                 System.arraycopy(K, 0, K2, 0, K2.length);
                 System.arraycopy(K, K2.length, K1, 0, K1.length);
@@ -264,7 +250,7 @@ public class IESEngineGCM {
 
             for (int i = 0; i != K1.length; i++)
             {
-                M[i] = (byte)(in_enc[inOff + V.length + i] ^ K1[i]);
+                M[i] = (byte)(in_enc[inOff + encodedPublicKey.length + i] ^ K1[i]);
             }
 
             len = K1.length;
@@ -283,15 +269,16 @@ public class IESEngineGCM {
             // If IV provide use it to initialize the cipher
             if (IV != null)
             {
-                cipher.init(false, new ParametersWithIV(new KeyParameter(K1), IV));
+                //cipher.init(false, new ParametersWithIV(new KeyParameter(K1), IV));
+                cipher.init(true, new AEADParameters(new KeyParameter(K1), 16*8, IV, encodedPublicKey));
             }
             else
             {
                 cipher.init(false, new KeyParameter(K1));
             }
 
-            M = new byte[cipher.getOutputSize(inLen - V.length)];
-            len = cipher.processBytes(in_enc, inOff + V.length, inLen - V.length, M, 0);
+            M = new byte[cipher.getOutputSize(inLen - encodedPublicKey.length)];
+            len = cipher.processBytes(in_enc, inOff + encodedPublicKey.length, inLen - encodedPublicKey.length, M, 0);
             len += cipher.doFinal(M, len);
         }
 
@@ -313,7 +300,7 @@ public class IESEngineGCM {
                 EphemeralKeyPair ephKeyPair = keyPairGenerator.generate();
 
                 this.privParam = ephKeyPair.getKeyPair().getPrivate();
-                this.V = ephKeyPair.getEncodedPublicKey();
+                this.encodedPublicKey = ephKeyPair.getEncodedPublicKey();
             }
         }
         else
@@ -332,20 +319,20 @@ public class IESEngineGCM {
                 }
 
                 int encLength = (inLen - bIn.available());
-                this.V = Arrays.copyOfRange(in, inOff, inOff + encLength);
+                this.encodedPublicKey = Arrays.copyOfRange(in, inOff, inOff + encLength);
             }
         }
 
         // Compute the common value and convert to byte array.
         agree.init(privParam);
         BigInteger z = agree.calculateAgreement(pubParam);
-        byte[] Z = BigIntegers.asUnsignedByteArray(agree.getFieldSize(), z);
+        byte[] sharedSecret = BigIntegers.asUnsignedByteArray(agree.getFieldSize(), z);
 
 
         try
         {
             // Initialise the KDF.
-            KDFParameters kdfParam = new KDFParameters(Z, V);
+            KDFParameters kdfParam = new KDFParameters(sharedSecret, encodedPublicKey);
             kdf.init(kdfParam);
 
             return forEncryption
@@ -354,18 +341,8 @@ public class IESEngineGCM {
         }
         finally
         {
-            Arrays.fill(Z, (byte)0);
+            Arrays.fill(sharedSecret, (byte)0);
         }
     }
 
-    // as described in Shroup's paper and P1363a
-    protected byte[] getLengthTag(byte[] p2)
-    {
-        byte[] L2 = new byte[8];
-        if (p2 != null)
-        {
-            Pack.longToBigEndian(p2.length * 8L, L2, 0);
-        }
-        return L2;
-    }
 }

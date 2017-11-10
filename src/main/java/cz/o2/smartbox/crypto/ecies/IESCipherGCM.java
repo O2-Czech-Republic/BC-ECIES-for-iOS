@@ -33,6 +33,7 @@ import org.bouncycastle.jce.interfaces.ECKey;
 import org.bouncycastle.jce.interfaces.IESKey;
 import org.bouncycastle.jce.spec.IESParameterSpec;
 import org.bouncycastle.util.Strings;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.security.AlgorithmParameters;
@@ -410,8 +411,6 @@ public class IESCipherGCM extends CipherSpi
 
         final ECDomainParameters ecParams = ((ECKeyParameters)key).getParameters();
 
-        final byte[] V;
-
         if (otherKeyParameter != null)
         {
             try
@@ -548,37 +547,4 @@ public class IESCipherGCM extends CipherSpi
         }
     }
 
-    /**
-     * Backwards compatibility
-     */
-    static public class OldECIES
-            extends IESCipher
-    {
-        public OldECIES()
-        {
-            super(new OldIESEngine(new ECDHBasicAgreement(),
-                    new KDF2BytesGenerator(new SHA1Digest()),
-                    new HMac(new SHA1Digest())));
-        }
-    }
-
-    static public class OldECIESwithCipher
-            extends IESCipher
-    {
-        public OldECIESwithCipher(BlockCipher baseCipher)
-        {
-            super(new OldIESEngine(new ECDHBasicAgreement(),
-                    new KDF2BytesGenerator(new SHA1Digest()),
-                    new HMac(new SHA1Digest()),
-                    new PaddedBufferedBlockCipher(baseCipher)));
-        }
-
-        public OldECIESwithCipher(BlockCipher baseCipher, int ivLength)
-        {
-            super(new OldIESEngine(new ECDHBasicAgreement(),
-                    new KDF2BytesGenerator(new SHA1Digest()),
-                    new HMac(new SHA1Digest()),
-                    new PaddedBufferedBlockCipher(baseCipher)), ivLength);
-        }
-    }
 }
