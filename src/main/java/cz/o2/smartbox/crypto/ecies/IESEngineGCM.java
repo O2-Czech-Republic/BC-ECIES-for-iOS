@@ -11,6 +11,7 @@ import org.bouncycastle.crypto.generators.EphemeralKeyPairGenerator;
 import org.bouncycastle.crypto.params.*;
 import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.BigIntegers;
+import org.bouncycastle.util.encoders.Base64;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -190,12 +191,11 @@ public class IESEngineGCM {
             // If iv provided use it to initialise the cipher
             if (IV != null)
             {
-                //cipher.init(true, new ParametersWithIV(new KeyParameter(K1), IV));
-                cipher.init(true, new AEADParameters(new KeyParameter(K1), 16*8, IV, encodedPublicKey));
+                cipher.init(true, new ParametersWithIV(new KeyParameter(K1), IV));
             }
             else
             {
-                cipher.init(true, new KeyParameter(K1));
+                cipher.init(true, new ParametersWithIV(new KeyParameter(K1), K2));
             }
 
             C = new byte[cipher.getOutputSize(inLen)];
@@ -269,12 +269,11 @@ public class IESEngineGCM {
             // If IV provide use it to initialize the cipher
             if (IV != null)
             {
-                //cipher.init(false, new ParametersWithIV(new KeyParameter(K1), IV));
-                cipher.init(true, new AEADParameters(new KeyParameter(K1), 16*8, IV, encodedPublicKey));
+                cipher.init(false, new ParametersWithIV(new KeyParameter(K1), IV));
             }
             else
             {
-                cipher.init(false, new KeyParameter(K1));
+                cipher.init(false, new ParametersWithIV(new KeyParameter(K1), K2));
             }
 
             M = new byte[cipher.getOutputSize(inLen - encodedPublicKey.length)];

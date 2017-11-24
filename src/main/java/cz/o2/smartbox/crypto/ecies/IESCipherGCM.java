@@ -9,7 +9,6 @@ import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.engines.DESedeEngine;
 import org.bouncycastle.crypto.engines.IESEngine;
-import org.bouncycastle.crypto.engines.OldIESEngine;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
 import org.bouncycastle.crypto.generators.EphemeralKeyPairGenerator;
 import org.bouncycastle.crypto.generators.KDF2BytesGenerator;
@@ -33,6 +32,7 @@ import org.bouncycastle.jce.interfaces.ECKey;
 import org.bouncycastle.jce.interfaces.IESKey;
 import org.bouncycastle.jce.spec.IESParameterSpec;
 import org.bouncycastle.util.Strings;
+import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
@@ -265,11 +265,17 @@ public class IESCipherGCM extends CipherSpi
         // Use default parameters (including cipher key size) if none are specified
         if (engineSpec == null)
         {
-            this.engineSpec = IESUtil.guessParameterSpec(engine.getCipher(), null);
+            byte[] nonce = null;
+            if (ivLength != 0 && opmode == Cipher.ENCRYPT_MODE)
+            {
+                nonce = new byte[ivLength];
+                random.nextBytes(nonce);
+            }
+            this.engineSpec = IESUtil.guessParameterSpec(engine.getCipher(), nonce);
         }
         else if (engineSpec instanceof IESParameterSpec)
         {
-            this.engineSpec = (IESParameterSpec)engineSpec;
+            this.engineSpec = (IESParameterSpec) engineSpec;
         }
         else
         {
@@ -404,6 +410,7 @@ public class IESCipherGCM extends CipherSpi
                 engineSpec.getMacKeySize(),
                 engineSpec.getCipherKeySize());
 
+
         if (engineSpec.getNonce() != null)
         {
             params = new ParametersWithIV(params, engineSpec.getNonce());
@@ -455,6 +462,7 @@ public class IESCipherGCM extends CipherSpi
             }
             catch (Exception e)
             {
+                e.printStackTrace();
                 throw new BadPaddingException(e.getMessage());
             }
 
