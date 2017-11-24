@@ -26,9 +26,9 @@ Apple uses a rare implementation of ECIES which does not perform explicit messag
 ## Encryption
 This ECIES variant performs the following steps to produce ciphertext result:
 1. A random ephemeral EC key pair is generated for each message
-2. A Diffie-Hellman key exchange is performed over the **ephemeral** private key and the **peer** public key. The result is a shared secret Z.
-3. A KDF is used to expand the shared secret into 256 bits of shared information. Apple uses X9.63 KDF which is simply a SHA message digest of the concatenation of the shared secret, a 4-byte incremental counter, and the ephemeral **public** key data which serves as the initialization vector (IV). The result is trimmed to the target key size (128 bits for EC curves <= 256 bits).
-4. The first half (128 bits) of the KDF result is then used as the symmetric encryption key for AES-GCM, while the second half (128 bits) is used as the nonce. 
+2. A Diffie-Hellman key exchange is performed over the **ephemeral private key and the peer (static) public key**. The result is a shared secret.
+3. A KDF is used to expand the shared secret into 256 bits of shared information. Apple uses X9.63 KDF which is simply a SHA message digest of the concatenation of the shared secret, a 4-byte incremental counter, and the ephemeral **public** key data which serves as the initialization vector (IV).
+4. The first half (128 bits) of the KDF result is used as the symmetric encryption key for AES-GCM, while the second half (128 bits) is used as the nonce. 
 5. The output of the encryption process is a concatenation of (in this order):
    - the **ephemeral** public key
    - the output of the AES-GCM function (which itself is just a concatenation of the ciphertext and the message tag)
