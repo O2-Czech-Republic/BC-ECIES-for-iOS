@@ -1,6 +1,6 @@
 # iOS-compatible ECIES implementation in Java
 
-This is a porting of Bouncy Castle's IES engine to provide compatibility with Apple's `SecKeyCreateEncryptedData`, specifically the ECIES algortihms provided by Apple's internal Common Crypto and Core Crypto libraries when using the `SecKeyAlgorithmECIESEncryptionCofactorVariableIV*` algorithm.
+This is a porting of Bouncy Castle's IES engine to provide compatibility with Apple's `SecKeyCreateEncryptedData`, specifically the ECIES algortihms provided by Apple's internal Common Crypto and Core Crypto libraries when using one of the `SecKeyAlgorithmECIESEncryptionCofactorVariableIV*` algorithms (https://developer.apple.com/documentation/security/seckeyalgorithm).
 
 Apple uses a rare implementation of ECIES which does not perform explicit message tagging, but instead uses an authenticated encryption (AEAD) variant of AES - AES-GCM. GCM (Galois/Counter mode) produces a message tag appended to the ciphertext similarly to other HMAC processes but allows for authentication data input.
 
