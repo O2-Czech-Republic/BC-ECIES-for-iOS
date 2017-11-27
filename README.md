@@ -44,5 +44,9 @@ Please note that contrary to the description provided, Apple **does not** use au
 https://opensource.apple.com/source/Security/Security-58286.1.32/OSX/shared_regressions/si-44-seckey-ies.m.auto.html
 Test run for `kSecKeyAlgorithmECIESEncryptionCofactorX963SHA256AESGCM` provides useful debugging data.
 
+##### Apple Core Crypto Source Code
+https://github.com/samdmarshall/apple-corecrypto/blob/df1ffe4ae19dcb7c320d336d7f5f28c9af6daa09/ccecies/src/ccecies_encrypt_gcm_composite.c
+`ccecies_encrypt_gcm_composite` provides ECIES implementation
+
 ##### Apple Core Crypto Testing Vectors
 https://github.com/samdmarshall/apple-corecrypto/blob/df1ffe4ae19dcb7c320d336d7f5f28c9af6daa09/ccecies/test_vectors/ecies_aes_gcm.inc
