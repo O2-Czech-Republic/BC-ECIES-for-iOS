@@ -20,7 +20,7 @@ Apple uses a secific implementation of ECIES which does not perform explicit mes
 - AES (GCM) using:
   - 128-bit key (for EC keypairs <= 256 bits) - first part of the KDF output
   - 16-byte nonce - second part of the KDF output
-  - 16 bytes long tag
+  - 16-byte tag
 
 
 ## Encryption
@@ -37,7 +37,7 @@ This ECIES variant performs the following steps to produce ciphertext result:
 ## Resources
 ##### Apple Open Source - Security Framework
 https://opensource.apple.com/source/Security/Security-58286.1.32/keychain/SecKey.h.auto.html
-See the description for `kSecKeyAlgorithmECIESEncryptionCofactorVariableIVX963SHA256AESGCM` for example.
+See the description of `kSecKeyAlgorithmECIESEncryptionCofactorVariableIVX963SHA256AESGCM` for example.
 Please note that contrary to the description provided, Apple **does not** use authentication data in GCM.
 
 
